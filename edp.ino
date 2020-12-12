@@ -1,34 +1,30 @@
 /*
-   采用外接电源单独供电，2 3口作为软串口接PC机作为调试端
-   1 0为串口，连接WIFI模块
+  2 3口作为软串口接WIFI模块，用IDE自带串口监视器调试  
 */
 #include <SoftwareSerial.h>
 #include <Wire.h>
 #include "edp.c"
 #define KEY  "HkJl7CamkwDPbphYFux5sCH9wDM="    //APIkey 
 #define ID   "655491010"                          //设备ID
-//#define PUSH_ID "680788"
 #define PUSH_ID NULL
 
-// 串口
-#define _baudrate   9600
+
 #define _rxpin      3
 #define _txpin      2
 #define DBG_UART    Serial    //调试串口
 #define WIFI_UART  dbgSerial   //设定联网串口
 #define redPin 9 
 #define greenPin 10 
-#define bluePin 11 
-#define touchPin 8
+#define bluePin 11  //rgbled
 SoftwareSerial dbgSerial( _rxpin, _txpin ); // 软串口联网
 edp_pkt *pkt;
 unsigned long setupMillis; //统计初始化所用时间
-char *pend;  //使用   函数必须的参数，无实际意义
-int sitTime=0; 
+char *pend;  //使用strtoul函数必须的参数，程序中并未使用
+int sitTime=0; // 累加从主机发来的坐姿持续时间
 int Time;  //最终发送至onenet的时间
 unsigned long sleepTime=0;  // 通过主机发送信息累加的时间
 int count(0); //控制到达设定时间后只发送一次数据的变量
-unsigned long beat=0; //发送类心跳包
+unsigned long beat=0; //控制发送类心跳包的时间变量
 /*
 * doCmdOk
 * 发送命令至模块，从回复中获取期待的关键字
@@ -76,8 +72,6 @@ void addSitTime(){
     analogWrite(bluePin,200);
     delay(500);
     analogWrite(bluePin,0);
-    Serial.print("GETTIME");
-    Serial.println(sitTime);
   }
 
  /*
@@ -167,7 +161,7 @@ void setup()
 {
   char buf[100] = {0};
   int tmp;
-  WIFI_UART.begin( _baudrate );
+  WIFI_UART.begin(9600);
   DBG_UART.begin(9600);
   WIFI_UART.setTimeout(3000);    //设置find超时时间
   delay(3000);
@@ -177,8 +171,8 @@ void setup()
   while (!doCmdOk("AT", "OK"));
   
 
-  while (!doCmdOk("AT+CWMODE=3", "OK"));            //工作模式
-  while (!doCmdOk("AT+CWJAP=\"LAPTOP1\",\"hkzm2011\"", "OK")); //连接笔记本热点
+  while (!doCmdOk("AT+CWMODE=3", "OK"));            //工作模式 STA+AP
+  while (!doCmdOk("AT+CWJAP=\"LAPTOP1\",\"hkzm2011\"", "OK")); //连接笔记本热点 热点名、密码可替换
   while (!doCmdOk("AT+CIPSTART=\"TCP\",\"183.230.40.39\",876", "CONNECT")); //连接TCP EDP协议服务器
   while (!doCmdOk("AT+CIPMODE=1", "OK"));           //透传模式
   while (!doCmdOk("AT+CIPSEND", ">"));      //开始发送
@@ -193,7 +187,7 @@ void setup()
 
 void loop()
 {
-  
+  //以下主要与建立edp协议的连接有关
   static int edp_connect = 0;
   bool trigger = false;
   edp_pkt rcv_pkt;
@@ -258,16 +252,19 @@ void loop()
 
           //数据处理与应用中EDP命令内容对应
           //本例中格式为  sitTime:{VALUE} VALUE由小程序设定 
-          sscanf(edp_command, "%[^:]:%s", datastr, val); //截取并另存字符串
+          sscanf(edp_command, "%[^:]:%s", datastr, val); //截取并另存字符串 这里为截取“：”后的字符串，具体请见sscanf用法
           DBG_UART.println(datastr);
           DBG_UART.println(val);
           String val1=String(val);
           DBG_UART.println(val1);
           val1=val1.substring(1,val1.length()-1); //截取并另存字符串
           DBG_UART.println(val1); 
-          sleepTime=strtoul(val1.c_str(),&pend,10);  //str转unsigned long函数 从此处获得设定睡眠时间（XX分钟后入睡）
+          sleepTime=strtoul(val1.c_str(),&pend,10);  //str转unsigned long函数 从此处获得设定睡眠时间（XX分钟后入睡）注意一定要转为unsigned long 因为int和unsigned long的储存格式不一样，不能直接比大小
           DBG_UART.println(sleepTime);
-          packetSend(packetDataSaveTrans(NULL, datastr, val1.c_str())); //将处理后的数据上传至onenet
+          packetSend(packetDataSaveTrans(NULL, datastr, val1.c_str())); //将处理后的数据上传至onenet（方便调试，实际可以删掉）
+          analogWrite(greenPin,200);
+          delay(400);
+          analogWrite(greenPin,0);
           setupMillis=millis();
           break;
         default:
@@ -281,7 +278,7 @@ void loop()
   if (rcv_pkt.len > 0)
     packetClear(&rcv_pkt);
 
-
+//以下为获得小程序端发来的指令中所含数据后的执行部分
 unsigned long currentMillis=millis()-setupMillis;    //减去建立edp连接所用时间，减少误差
 DBG_UART.println(currentMillis);
 int brightness = analogRead(A0); 
@@ -325,5 +322,5 @@ if(beat==20000){
 const char* q="beat";
 packetSend(packetDataSaveTrans(NULL, "beat", q));
 beat=0;
-} //此处用来发送一个类似心跳包的数据，以维持edp的长时间连接（否则最长只能连接4分钟）
+} //此处用来每20s发送一个类似心跳包的数据，以维持edp的长时间连接（否则最长只能连接4分钟）
 }
