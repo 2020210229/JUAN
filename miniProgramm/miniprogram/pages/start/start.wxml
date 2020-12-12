@@ -1,0 +1,11 @@
+<!--miniprogram/pages/start/start.wxml-->
+<view>
+  <navigator url="/pages/send/index"><button  class="kai">开卷!!!!!</button></navigator>
+</view>
+<view>
+
+</view>
+<view>
+  <navigator url="/pages/check/check"><button class="lishi">查看历史</button></navigator>
+</view>
+<image src="../start/DENGGANG.jpg"  class="picture"></image>
