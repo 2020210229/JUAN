@@ -19,3 +19,7 @@
     font-size: xx-large;
     color: rgb(188, 33, 226);
   }
+  .calss{
+    color: rgb(255, 115, 0);
+    font-weight: 600;
+  }
