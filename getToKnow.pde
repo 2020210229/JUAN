@@ -26,7 +26,7 @@ void setup()
   myPort = new Serial(this,"com4", 38400);  // get connected with arduino
 }
 
-int TimeToChange(int time,int x)  //chanage the color of progress bar
+int TimeToChange(int time,int x)  //change the color of progress bar
 { if(time>100*x)
     return 255;
   else return 0;
