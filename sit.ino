@@ -1,7 +1,7 @@
 #include<Wire.h>
-const int TrigPin1 = 10; //发送超声波1、2
+const int TrigPin1 = 10; //发送超声波引脚1、2
 const int TrigPin2= 13;
-const int EchoPin1 = 11;//接收超声波1、2
+const int EchoPin1 = 11;//接收超声波引脚1、2
 const int EchoPin2 = 12; 
 const int BellPin=9;//有源蜂鸣器引脚
 unsigned long int sitTime=0;//用来累加坐姿时间
@@ -14,10 +14,10 @@ void setup() {
   Wire.begin();
   Serial.begin(38400);     
   
-  pinMode(TrigPin1, OUTPUT);
+  pinMode(TrigPin1, OUTPUT);//TRIG与发射超声波有关，要设为OUTPUT
   pinMode(TrigPin2, OUTPUT);
   pinMode(EchoPin1, INPUT);
-  pinMode(EchoPin2, INPUT);
+  pinMode(EchoPin2, INPUT); //ECHO与接收有关，要设为INPUT
   //超声波首发有关引脚
   pinMode(BellPin,OUTPUT);
 }
@@ -51,12 +51,12 @@ double distance2=getDistance2();
 //Serial.print("&&&&&");
 //Serial.println(distance2);
 if(distance1<=25||distance2<=25){
-  if(rest==1&&interval<20000){
+  if(rest==1&&interval<20000){ //计时小于20s，触发反作弊机制，给蜂鸣器高电平
     digitalWrite(BellPin,HIGH);
     interval+=750;  
     }
-  else if(rest==1)
-   {rest=0;
+  else if(rest==1) 
+   {rest=0;  //计时达到20s，不触发机制||允许作弊坚决者坚持20s持续听有源蜂鸣器解除反作弊
     digitalWrite(BellPin,LOW);
     }
    first=1;
@@ -65,14 +65,14 @@ if(distance1<=25||distance2<=25){
  Serial.println(sitTime);
   }
  else{
- if(first==1){
+ if(first==1){ //第一次观测到起身将计时清零
   interval=0;
   first=0;
   }
-  rest=1;
+  rest=1; 
   digitalWrite(BellPin,LOW);
   Serial.write(0);
-  interval+=750;
+  interval+=750; //之后不断累加
   }  
 //两个传感器只要一个采集到小于25cm的距离就通过串口向Processing发送1，否则发送0；活动时间小于20s坐回椅子会让蜂鸣器一直响到interval达到设定的时间间隔为止
 if(Serial.available()>0){
@@ -85,10 +85,7 @@ if(Serial.available()>0){
    case 'S':
        digitalWrite(BellPin,HIGH);
        break;
-//   case 'G':
-//       digitalWrite(BellPin,LOW);
-//       break;
-  }  //接收从Processing 返回的数据，‘F'、‘S’分别对应蜂鸣器响一声、一直响（G为废案）
+  }  //接收从Processing 返回的数据，‘F'、‘S’分别对应蜂鸣器响一声、一直响
    
   }
  if(sitTime>=10000){
