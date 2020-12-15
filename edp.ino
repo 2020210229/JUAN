@@ -265,7 +265,7 @@ void loop()
           analogWrite(greenPin,200);
           delay(400);
           analogWrite(greenPin,0);
-          setupMillis=millis();
+          setupMillis=millis(); //重置时间，这是实现“可以随时修改睡眠时间”功能的基础
           break;
         default:
           DBG_UART.print("unknown type: ");
@@ -277,8 +277,9 @@ void loop()
   }
   if (rcv_pkt.len > 0)
     packetClear(&rcv_pkt);
-
+//
 //以下为获得小程序端发来的指令中所含数据后的执行部分
+//
 unsigned long currentMillis=millis()-setupMillis;    //减去建立edp连接所用时间，减少误差
 DBG_UART.println(currentMillis);
 int brightness = analogRead(A0); 
@@ -286,25 +287,25 @@ if(brightness<300){
  analogWrite(redPin,0);
   }
 if (sleepTime!=0){
-    if(sleepTime>2){
+    if(sleepTime>2){ //这里的2可以改哦！只是为了视频演示方便所以调小了
           if(currentMillis>=sleepTime*1000*60){
-                    if(count==0){
+                    if(count==0){ //第一次到时间，上传数据+呼吸灯
                              Time=sitTime;
                              breathLight();
                              uploadData();   }
-                   else 
+                   else           //之后只是呼吸灯
                              breathLight();
 }
-            else if(currentMillis>=(sleepTime-2)*1000*60){ 
+            else if(currentMillis>=(sleepTime-2)*1000*60){ //这里的2也要对应改
                    if(brightness>=300)
                          analogWrite(redPin,200);
 } 
 }
-else{
+else{ //获取到的时间小于2分钟
      if(brightness>300)
               analogWrite(redPin,200);
      if(currentMillis>=sleepTime*1000*60&&sleepTime!=0){
-                  if(count==0){
+                  if(count==0){  //同上
                        Time=sitTime;
                        breathLight();
                        uploadData();
