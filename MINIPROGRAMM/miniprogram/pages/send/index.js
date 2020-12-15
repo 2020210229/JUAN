@@ -9,7 +9,7 @@ Page({
 this.sure();
   },
   data: {
-  i:1,
+  i:0,
   "zone":'',
   "state":'',
   "target":'',
@@ -35,8 +35,6 @@ this.sure();
   },
 
   send(e){
-      // _this.sure()
-  //  var _this=this;
    wx.request({
     
   
@@ -49,8 +47,8 @@ this.sure();
       data:`sleepTime:{${this.data.show}}`,
 
      success:(res)=>{
-      if(this.data.i==1){
-         this.data.i=0
+      if(this.data.i==0){
+         this.data.i=1
       }
       console.log(this.data.i)
        console.log(res)

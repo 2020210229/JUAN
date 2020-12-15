@@ -1,10 +1,21 @@
 /* miniprogram/pages/check/check.wxss */
 
-page{
-background-color: rgba(252, 143, 197, 0.774);
-}
 .picture{
   width:750rpx;
   height:600rpx;
+  margin-top: 63rpx;
+  z-index: +1;
   
 }
+.background {
+  width: 100%;
+  height: 100%;
+  position:fixed; 
+  background-size:100% 100%; 
+  z-index: -1; 
+  }
+  .button{
+    size: 100ch;
+    font-size: xx-large;
+    color: rgb(188, 33, 226);
+  }
